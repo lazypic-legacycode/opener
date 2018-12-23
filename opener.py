@@ -31,11 +31,17 @@ class Opener(QObject):
 		self.initProject()
 		self.window.show()
 		# event
+		# click
 		self.projectList.itemClicked.connect(self.projectClick)
 		self.seqList.itemClicked.connect(self.seqClick)
 		self.shotList.itemClicked.connect(self.shotClick)
 		self.taskList.itemClicked.connect(self.taskClick)
 		self.fileList.itemClicked.connect(self.fileClick)
+		# double click
+		self.projectList.itemDoubleClicked.connect(self.projectDoubleClick)
+		self.seqList.itemDoubleClicked.connect(self.fileDoubleClick)
+		self.shotList.itemDoubleClicked.connect(self.fileDoubleClick)
+		self.taskList.itemDoubleClicked.connect(self.fileDoubleClick)
 		self.fileList.itemDoubleClicked.connect(self.fileDoubleClick)
 	
 	def initProject(self):
@@ -102,11 +108,38 @@ class Opener(QObject):
 	def fileClick(self, item):
 		self.filename = str(item.text())
 	
+	def projectDoubleClick(self, item):
+		self.project = str(item.text())
+		filePath = "/".join([self.root, self.project])
+		if os.path.isdir(filePath):
+			subprocess.Popen(["open",filePath], stdout=subprocess.PIPE)
+
 	def fileDoubleClick(self, item):
 		self.filename = str(item.text())
 		filePath = "/".join([self.root, self.project, self.middle, self.seq, self.shot, self.task, self.filename])
 		if os.path.isdir(filePath):
 			subprocess.Popen(["open",filePath], stdout=subprocess.PIPE)
+		name, ext = os.path.splitext(self.filename)
+		if ext == ".nk":
+			env = os.environ.copy()
+			env["NUKE_PATH"] = "/Users/woong/nuke"
+			env["NUKE_FONT_PATH"] = "/Users/woong/nuke/font"
+			subprocess.Popen(["/Applications/Nuke11.1v4/NukeX11.1v4.app/NukeX11.1v4",filePath], env=env, stdout=subprocess.PIPE)
+		if ext == ".blend":
+			env = os.environ.copy()
+			env["OCIO"] = "/Users/woong/OpenColorIO-Configs/aces_1.0.3/config.ocio"
+			subprocess.Popen(["/Applications/Blender/blender.app/Contents/MacOS/blender","--python","~/blender/init.py", filePath], env=env, stdout=subprocess.PIPE)
+			return
+		if ext == ".ntp":
+			env = os.environ.copy()
+			env["NATRON_PLUGIN_PATH"] = "/Users/woong/natron"
+			env["OCIO"] = "/Users/woong/OpenColorIO-Configs/aces_1.0.3/config.ocio"
+			subprocess.Popen(["/Applications/Natron.app/Contents/MacOS/Natron",filePath], env=env, stdout=subprocess.PIPE)
+		if ext == ".kra":
+			env = os.environ.copy()
+			env["OCIO"] = "/Users/woong/OpenColorIO-Configs/aces_1.0.3/config.ocio"
+			subprocess.Popen(["/Applications/krita.app/Contents/MacOS/krita",filePath], env=env, stdout=subprocess.PIPE)
+
 
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
