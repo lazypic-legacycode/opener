@@ -118,7 +118,10 @@ class Opener(QObject):
 		self.filename = str(item.text())
 		filePath = "/".join([self.root, self.project, self.middle, self.seq, self.shot, self.task, self.filename])
 		if os.path.isdir(filePath):
-			subprocess.Popen(["open",filePath], stdout=subprocess.PIPE)
+			app = "open"
+			if sys.platform == "linux2":
+				app = "nautilus"
+			subprocess.Popen([app,filePath], stdout=subprocess.PIPE)
 		name, ext = os.path.splitext(self.filename)
 		if ext == ".nk":
 			env = os.environ.copy()
